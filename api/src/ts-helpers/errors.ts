@@ -1,4 +1,4 @@
-export function getErrors(e) {
+export function getErrors(e: unknown) {
   let error;
   if (typeof e === "string") {
     error = e;

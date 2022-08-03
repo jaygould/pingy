@@ -5,6 +5,7 @@ import authPlugin from "./plugins/auth";
 import authPassword from "./routes/auth-password";
 import users from "./routes/users";
 import externalPages from "./routes/external-pages";
+import watchPage from "./routes/watch-page";
 
 const server = fastify();
 
@@ -17,6 +18,7 @@ server.register(authPlugin);
 server.register(authPassword, { prefix: "v1" });
 server.register(users, { prefix: "v1" });
 server.register(externalPages, { prefix: "v1" });
+server.register(watchPage, { prefix: "v1" });
 
 // Server
 server.listen({ port: 8080, host: "0.0.0.0" }, (err, address) => {

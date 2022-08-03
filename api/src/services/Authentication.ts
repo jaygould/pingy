@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient, User } from "@prisma/client";
 
 import {
   IUser,
@@ -23,7 +23,7 @@ class Authentication {
     lastName,
     email,
     password,
-  }: IUserName & IUserLogin): Promise<IUser> {
+  }: Partial<User>): Promise<User> {
     if (!email || !firstName || !lastName || !password) {
       throw new Error("You must send all register details.");
     }
@@ -39,12 +39,12 @@ class Authentication {
     }
 
     const authPassword = new AuthenticationPassword(password, null);
-    const newUser = await this.saveUser(
+    const newUser = await this.saveUser({
       firstName,
       lastName,
       email,
-      authPassword.hashPassword()
-    );
+      password: authPassword.hashPassword(),
+    });
 
     await this.logUserActivity(newUser.id, "signup");
 
@@ -92,8 +92,8 @@ class Authentication {
     });
   }
 
-  doesUserExist(email: string): Promise<IUser> {
-    const userEmailWhere: Prisma.UserWhereInput = {
+  doesUserExist(email: string): Promise<User | null> {
+    const userEmailWhere: Prisma.UserWhereUniqueInput = {
       email: email,
     };
 
@@ -108,13 +108,20 @@ class Authentication {
     return re.test(String(email).toLowerCase());
   }
 
-  saveUser(first_name, last_name, email, passwordHash): Promise<IUser> {
+  saveUser({
+    firstName,
+    lastName,
+    email,
+    password,
+  }: Partial<User>): Promise<User> {
+    if (!email) throw new Error();
+
     return this.db.user.create({
       data: {
-        firstName: first_name,
-        lastName: last_name,
+        firstName: firstName,
+        lastName: lastName,
         email: email,
-        password: passwordHash,
+        password: password,
       },
     });
   }

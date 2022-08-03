@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, User } from "@prisma/client";
 import * as jwt from "jsonwebtoken";
 import * as _ from "lodash";
 
@@ -22,7 +22,7 @@ class AuthenticationToken {
     }
   }
 
-  createToken(user: IUser) {
+  createToken(user: User) {
     this.token = jwt.sign(
       _.omit(user, "password"),
       config.authSecret as string,

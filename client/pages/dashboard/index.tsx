@@ -23,6 +23,11 @@ const Dashboard: FC<Props> = ({ name }) => {
           <a className="underline">Users</a>
         </Link>
       </div>
+      <div className="mb-5">
+        <Link href="/dashboard/crawler">
+          <a className="underline">Crawler</a>
+        </Link>
+      </div>
 
       <div className="mb-5">
         <Button

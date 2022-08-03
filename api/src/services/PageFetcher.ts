@@ -5,7 +5,7 @@ class PageFetcher {
   public db;
   public url;
 
-  constructor({ url }) {
+  constructor({ url }: { url: string }) {
     const prisma = new PrismaClient();
     this.db = prisma;
     this.url = url;

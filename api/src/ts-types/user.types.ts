@@ -19,4 +19,6 @@ export type IUser = IUserName &
     id: number;
   };
 
+export type IUserPayload = IUserName & { id: number };
+
 export type LoginActivity = "login" | "signup";
