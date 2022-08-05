@@ -1,14 +1,16 @@
-FROM node:16.15.0-alpine
-
+FROM node:16-alpine
+RUN npm i npm@latest -g
 RUN apk update
-RUN apk add vim nano
+RUN apk add rsync
 
-WORKDIR /home/app/api
+RUN mkdir /home/api
 
-COPY package*.json ./
+RUN mkdir /home/api/cache
+WORKDIR /home/api/cache
 
-COPY . .
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm install
 
-# https://stackoverflow.com/questions/30043872/docker-compose-node-modules-not-present-in-a-volume-after-npm-install-succeeds
-# https://stackoverflow.com/questions/45739252/access-node-modules-in-typescript-while-using-docker-docker-compose
-# https://burnedikt.com/dockerized-node-development-and-mounting-node-volumes/
+RUN mkdir /home/api/app
+WORKDIR /home/api/app

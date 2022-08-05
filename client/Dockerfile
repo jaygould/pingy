@@ -1,10 +1,16 @@
-FROM node:16.15.0-alpine
-
+FROM node:16-alpine
+RUN npm i npm@latest -g
 RUN apk update
-RUN apk add vim nano
+RUN apk add rsync
 
-WORKDIR /home/app/client
+RUN mkdir /home/client
 
-COPY package*.json ./
+RUN mkdir /home/client/cache
+WORKDIR /home/client/cache
 
-COPY . .
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm install
+
+RUN mkdir /home/client/app
+WORKDIR /home/client/app
