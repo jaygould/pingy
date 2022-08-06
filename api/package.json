@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "npm run prisma:generate && npm run prisma:migrate && ts-node-dev --poll --exit-child ./src/index.ts",
+    "dev": "ts-node-dev --poll --exit-child ./src/index.ts",
     "start": "tsc && node ./build/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
