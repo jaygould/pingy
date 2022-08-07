@@ -1,0 +1,66 @@
+import { PrismaClient } from "@prisma/client";
+import { AlertEmail } from "./AlertEmail";
+
+type AlertMethods = "TEXT" | "EMAIL";
+type AlertType = "CONTEN_CHANGED" | "SITE_DOWN";
+
+interface IAlertConstructor {
+  alertMethods: Array<AlertMethods>;
+  alertType: AlertType;
+  userId: number;
+  pageUrl: string;
+}
+
+class Alert {
+  public db: PrismaClient;
+  public alertMethods: Array<AlertMethods>;
+  public alertType: AlertType;
+  public userId: number;
+  public pageUrl: string;
+
+  constructor({ alertMethods, alertType, userId, pageUrl }: IAlertConstructor) {
+    this.db = new PrismaClient();
+    this.alertMethods = alertMethods;
+    this.alertType = alertType;
+    this.userId = userId;
+    this.pageUrl = pageUrl;
+
+    if (!this.alertMethods || !this.alertType || !this.userId || !this.pageUrl)
+      throw new Error("Missing constructor arguments");
+  }
+
+  async sendAlert(): Promise<void> {
+    const alertMessage = this.constructAlertMessage();
+
+    if (!alertMessage) throw new Error("No matching message to send.");
+
+    if (this.alertMethods.includes("EMAIL")) {
+      const alert = new AlertEmail({ alertMessage, userId: this.userId });
+      return alert.sendEmail();
+    }
+    if (this.alertMethods.includes("TEXT")) {
+      // TODO: create and implement text messaging
+    }
+
+    return;
+  }
+
+  async getSentAlerts() {
+    // TODO: get previously sent alerts
+  }
+
+  private constructAlertMessage(): string | undefined {
+    let alertMessage;
+
+    if (this.alertType === "CONTEN_CHANGED") {
+      alertMessage = `The content for the website ${this.pageUrl} has changed!`;
+    }
+    if (this.alertType === "SITE_DOWN") {
+      alertMessage = `The site ${this.pageUrl} is down!`;
+    }
+
+    return alertMessage;
+  }
+}
+
+export { Alert };

@@ -25,6 +25,7 @@ const Crawler: FC<Props> = ({}) => {
     register,
     handleSubmit,
     formState: { errors },
+    getValues,
   } = useForm<ICrawlerFields>({
     defaultValues: { pageUrl: "" },
   });
@@ -33,6 +34,26 @@ const Crawler: FC<Props> = ({}) => {
     axios
       .post<ICrawlerResponse>(
         `${process.env.NEXT_PUBLIC_API_URL}/watch-page`,
+        {
+          pageUrl,
+        },
+        {
+          headers: { Authorization: `Bearer ${cookies.jwt}` },
+        }
+      )
+      .then((response) => {
+        setMessage({ type: "success", text: response?.data?.message });
+      })
+      .catch((error) => {
+        setMessage({ type: "error", text: error?.response?.data?.message });
+      });
+  };
+
+  const onSubmitRepeatCrawl = () => {
+    const { pageUrl } = getValues();
+    axios
+      .post<ICrawlerResponse>(
+        `${process.env.NEXT_PUBLIC_API_URL}/recrawl-page`,
         {
           pageUrl,
         },
@@ -63,10 +84,21 @@ const Crawler: FC<Props> = ({}) => {
 
           <Button
             type={ButtonTypeEnum.submit}
-            text={"Login"}
+            text={"Start watching"}
             color={"bg-blue-600"}
           ></Button>
         </form>
+      </div>
+
+      <div className="mb-10">
+        <Button
+          type={ButtonTypeEnum.onClick}
+          text={"Recrawl"}
+          color={"bg-blue-600"}
+          onClick={() => {
+            onSubmitRepeatCrawl();
+          }}
+        ></Button>
       </div>
 
       <GlobalMessage
