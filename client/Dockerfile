@@ -1,10 +1,12 @@
-FROM node:16.15.0-alpine
+FROM node:16
 
-RUN apk update
-RUN apk add vim nano
+RUN apt-get update -y
+RUN apt-get install -y rsync
 
-WORKDIR /home/app/client
+WORKDIR /home/client/cache
 
-COPY package*.json ./
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm install
 
-COPY . .
+WORKDIR /home/client/app

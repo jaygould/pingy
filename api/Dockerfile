@@ -1,14 +1,14 @@
-FROM node:16.15.0-alpine
+FROM node:16
 
-RUN apk update
-RUN apk add vim nano
+RUN apt-get update -y
+RUN apt-get install -y rsync
 
-WORKDIR /home/app/api
+WORKDIR /home/api/cache
 
-COPY package*.json ./
+COPY package.json ./
+COPY package-lock.json ./
+COPY prisma ./prisma/
+RUN npm install
+RUN npx prisma generate
 
-COPY . .
-
-# https://stackoverflow.com/questions/30043872/docker-compose-node-modules-not-present-in-a-volume-after-npm-install-succeeds
-# https://stackoverflow.com/questions/45739252/access-node-modules-in-typescript-while-using-docker-docker-compose
-# https://burnedikt.com/dockerized-node-development-and-mounting-node-volumes/
+WORKDIR /home/api/app 
