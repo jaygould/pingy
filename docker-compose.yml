@@ -11,6 +11,7 @@ services:
       - 3000:3000
     volumes:
       - ./client:/home/client/app
+    restart: on-failure
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8080/v1
       NEXT_PUBLIC_NETWORK_API_URL: http://ping-api:8080/v1
@@ -25,6 +26,7 @@ services:
       - 8080:8080
     volumes:
       - ./api:/home/api/app
+    restart: on-failure
     depends_on:
       - ping-db
   ping-db:
