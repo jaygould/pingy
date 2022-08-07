@@ -6,7 +6,7 @@ services:
       context: ./client
       args:
         - NODE_ENV=development
-    command: sh -c "rsync -arv /home/client/cache/node_modules/. /home/client/app/node_modules && npm run dev"
+    command: sh -c "rsync -arvO /home/client/cache/node_modules/. /home/client/app/node_modules && npm run dev"
     ports:
       - 3000:3000
     volumes:
@@ -20,7 +20,7 @@ services:
       context: ./api
       args:
         - NODE_ENV=development
-    command: sh -c "rsync -arv /home/api/cache/node_modules/. /home/api/app/node_modules && npm run dev"
+    command: sh -c "rsync -arvO /home/api/cache/node_modules/. /home/api/app/node_modules && npm run dev"
     ports:
       - 8080:8080
     volumes:

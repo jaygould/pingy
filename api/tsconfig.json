@@ -11,5 +11,6 @@
     "strict": true
   },
   // Needed as these declaration files are NOT ambient as they contain imports, so need manually adding
+  "include": ["./src/**/*"],
   "files": ["./src/ts-types/fastify.d.ts", "./src/ts-types/fastify-jwt.d.ts"]
 }
