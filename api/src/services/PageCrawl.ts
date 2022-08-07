@@ -3,7 +3,7 @@ import { PageFetcher } from "./PageFetcher";
 import { PageParser } from "./PageParser";
 import { Alert } from "./Alert";
 
-class UserCrawl {
+class PageCrawl {
   public db: PrismaClient;
   public pageFetcher: PageFetcher;
   public pageParser!: PageParser;
@@ -182,4 +182,4 @@ class UserCrawl {
   }
 }
 
-export { UserCrawl };
+export { PageCrawl };

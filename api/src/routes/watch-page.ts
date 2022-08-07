@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { UserCrawl } from "../services/UserCrawl";
+import { PageCrawl } from "../services/PageCrawl";
 import { getErrors } from "../ts-helpers/errors";
 
 type IWatchPageRequest = FastifyRequest<{
@@ -17,8 +17,8 @@ async function routes(fastify: FastifyInstance) {
       const userId = request?.user?.id;
 
       try {
-        const userCrawl = new UserCrawl({ url: pageUrl });
-        await userCrawl.watchPage({ userId });
+        const pageCrawl = new PageCrawl({ url: pageUrl });
+        await pageCrawl.watchPage({ userId });
 
         return reply.send({ message: "Success." });
       } catch (e: unknown) {
@@ -38,8 +38,8 @@ async function routes(fastify: FastifyInstance) {
       const userId = request?.user?.id;
 
       try {
-        const userCrawl = new UserCrawl({ url: pageUrl });
-        await userCrawl.recrawlPage({ userId });
+        const pageCrawl = new PageCrawl({ url: pageUrl });
+        await pageCrawl.recrawlPage({ userId });
 
         return reply.send({ message: "Success." });
       } catch (e: unknown) {
