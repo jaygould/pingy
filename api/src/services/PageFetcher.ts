@@ -22,7 +22,6 @@ class PageFetcher {
 
     try {
       const response = await axios.get(this.url);
-      throw new Error("TEST ERROR DOWN");
       return response?.data;
     } catch (e: unknown | AxiosError) {
       if (axios.isAxiosError(e)) {
