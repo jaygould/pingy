@@ -11,6 +11,7 @@ type Props = {};
 
 interface ICrawlerFields {
   pageUrl: string;
+  monitorType: "PAGE_DOWN" | "PAGE_CHANGE" | "";
 }
 
 interface ICrawlerResponse {
@@ -27,15 +28,19 @@ const Crawler: FC<Props> = ({}) => {
     formState: { errors },
     getValues,
   } = useForm<ICrawlerFields>({
-    defaultValues: { pageUrl: "" },
+    defaultValues: { pageUrl: "", monitorType: "" },
   });
 
-  const onSubmit: SubmitHandler<ICrawlerFields> = ({ pageUrl }) => {
+  const onSubmit: SubmitHandler<ICrawlerFields> = ({
+    pageUrl,
+    monitorType,
+  }) => {
     axios
       .post<ICrawlerResponse>(
         `${process.env.NEXT_PUBLIC_API_URL}/watch-page`,
         {
           pageUrl,
+          monitorType,
         },
         {
           headers: { Authorization: `Bearer ${cookies.jwt}` },
@@ -81,6 +86,30 @@ const Crawler: FC<Props> = ({}) => {
               required: true,
             })}
           />
+
+          <div>
+            <div>
+              <input
+                key="pageDown"
+                name={`monitorType-pageDown`}
+                type="checkbox"
+                value="pageDown"
+                {...register("monitorType", {})}
+              />
+
+              <label>Page Down</label>
+            </div>
+            <div>
+              <input
+                key="pageChange"
+                name={`monitorType-pageChange`}
+                type="checkbox"
+                value="pageChange"
+                {...register("monitorType", {})}
+              />
+              <label>Page Change</label>
+            </div>
+          </div>
 
           <Button
             type={ButtonTypeEnum.submit}

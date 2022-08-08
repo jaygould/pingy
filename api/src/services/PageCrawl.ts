@@ -1,22 +1,26 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Status } from "@prisma/client";
 import { PageFetcher } from "./PageFetcher";
 import { PageParser } from "./PageParser";
 import { Alert } from "./Alert";
+import { MonitorType } from "../ts-types/user.types";
 
 class PageCrawl {
   public db: PrismaClient;
   public pageFetcher: PageFetcher;
   public pageParser!: PageParser;
   public url: string;
+  public monitorType: MonitorType;
 
-  constructor({ url }: { url: string }) {
+  constructor({ url, monitorType }: { url: string; monitorType: MonitorType }) {
     this.db = new PrismaClient();
     this.pageFetcher = new PageFetcher({ url });
     this.url = url;
+    this.monitorType = monitorType;
   }
 
   async watchPage({ userId }: { userId: number }) {
-    if (!this.url) throw new Error("No URL supplied.");
+    if (!this.url || !this.monitorType)
+      throw new Error("Please supply URL and monitor type.");
 
     const existingWatch = await this.isUserWatchingPage({ userId });
 
@@ -35,7 +39,11 @@ class PageCrawl {
 
       if (!htmlBody) throw new Error();
 
-      await this.beginUserWatchingPage({ userId, fetchedPage: htmlBody });
+      await this.beginUserWatchingPage({
+        userId,
+        fetchedPage: htmlBody,
+        monitorType: this.monitorType,
+      });
 
       return;
     } catch (e: unknown | Error) {
@@ -51,8 +59,25 @@ class PageCrawl {
     if (!this.url) throw new Error("No URL supplied.");
 
     const existingWatch = await this.isUserWatchingPage({ userId });
-    if (!existingWatch) throw new Error("Page not being watched");
+    if (!existingWatch) throw new Error("Page not being watched by user");
 
+    const monitorType = this.decodeMonitorType({
+      monitorType: existingWatch.monitorType,
+    });
+
+    try {
+      if (monitorType.includes("pageChange")) {
+        this.actionRecrawlForPageChange({ userId });
+      }
+      if (monitorType.includes("pageDown")) {
+        this.actionRecrawlForPageDown({ userId });
+      }
+    } catch (e) {
+      return;
+    }
+  }
+
+  async actionRecrawlForPageChange({ userId }: { userId: number }) {
     try {
       const fetchedPage = await this.pageFetcher.getPage();
       const parsedPage = new PageParser({
@@ -74,6 +99,7 @@ class PageCrawl {
         await this.updateUserWatchingWithCrawl({
           userId,
           fetchedPage: htmlBody,
+          status: "changedContent",
         });
 
         const alert = new Alert({
@@ -88,26 +114,48 @@ class PageCrawl {
 
       return;
     } catch (e: unknown | Error) {
-      throw new Error(
-        e instanceof Error
-          ? e.message
-          : "There was a problem fetching the page."
-      );
+      // If page is down when looking for updated content, it doesn't matter, as user
+      // should not be told unless they are looking for page down specifically
+      return;
     }
   }
 
+  async actionRecrawlForPageDown({ userId }: { userId: number }) {
+    try {
+      await this.pageFetcher.getPage();
+      return;
+    } catch (e) {
+      // If page is down when user is monitoring page down, don't return error as this is to be
+      // handled manually as an alert
+
+      await this.updateUserWatchingWithCrawl({
+        userId,
+        fetchedPage: "",
+        status: "pageDown",
+      });
+
+      const alert = new Alert({
+        alertMethods: ["EMAIL"],
+        alertType: "SITE_DOWN",
+        userId,
+        pageUrl: this.url,
+      });
+
+      await alert.sendAlert();
+
+      return;
+    }
+  }
   async isUserWatchingPage({ userId }: { userId: number }) {
-    const userFound = await this.db.pageCrawl.findMany({
+    const userWatchFound = await this.db.pageCrawl.findMany({
       where: {
         userId: userId,
         pageUrl: this.url,
-        status: {
-          not: "cancelled",
-        },
+        status: "initialCrawl",
       },
     });
 
-    if (userFound.length) return true;
+    if (userWatchFound.length) return userWatchFound[0];
 
     return false;
   }
@@ -140,9 +188,11 @@ class PageCrawl {
   async beginUserWatchingPage({
     userId,
     fetchedPage,
+    monitorType,
   }: {
     userId: number;
     fetchedPage: string;
+    monitorType: MonitorType;
   }) {
     return this.db.pageCrawl.create({
       data: {
@@ -150,6 +200,7 @@ class PageCrawl {
         pageUrl: this.url,
         pageHtml: fetchedPage,
         status: "initialCrawl",
+        monitorType: this.encodeMonitorType({ monitorType }),
       },
     });
   }
@@ -157,20 +208,25 @@ class PageCrawl {
   async updateUserWatchingWithCrawl({
     userId,
     fetchedPage,
+    status,
   }: {
     userId: number;
     fetchedPage: string;
+    status: Status;
   }) {
     return this.db.pageCrawl.create({
       data: {
         userId,
         pageUrl: this.url,
         pageHtml: fetchedPage,
-        status: "changedContent",
+        status: status,
+        monitorType: "",
       },
     });
   }
 
+  // TODO: iterate over each element and look for changes in TEXT (non HTML content), and image src URLs.
+  // TODO: ignore all HTML attributes other than src, a, class, id
   private hasPageContentChanged({
     existingPageHtml,
     currentPageHtml,
@@ -179,6 +235,25 @@ class PageCrawl {
     currentPageHtml: string;
   }) {
     return existingPageHtml !== currentPageHtml;
+  }
+
+  private encodeMonitorType({ monitorType }: { monitorType: MonitorType }) {
+    try {
+      return JSON.stringify(monitorType);
+    } catch (e) {
+      return "";
+    }
+  }
+  private decodeMonitorType({
+    monitorType,
+  }: {
+    monitorType: string;
+  }): Array<MonitorType> {
+    try {
+      return JSON.parse(monitorType);
+    } catch (e) {
+      return [];
+    }
   }
 }
 

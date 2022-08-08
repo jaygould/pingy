@@ -22,3 +22,5 @@ export type IUser = IUserName &
 export type IUserPayload = IUserName & { id: number };
 
 export type LoginActivity = "login" | "signup";
+
+export type MonitorType = "pageDown" | "pageChange" | "";

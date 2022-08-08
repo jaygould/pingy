@@ -20,6 +20,7 @@ class Cron {
     });
   }
 
+  // TODO: add tp queueing system
   private async htmlChangeCron() {
     const activeCrawls = await this.crawls.activeCrawls();
     if (!activeCrawls || !activeCrawls.length) return;
@@ -27,7 +28,7 @@ class Cron {
     activeCrawls.map(async (crawl) => {
       const userId = crawl.userId;
       const pageUrl = crawl.pageUrl;
-      const pageCrawl = new PageCrawl({ url: pageUrl });
+      const pageCrawl = new PageCrawl({ url: pageUrl, monitorType: "" });
       return pageCrawl.recrawlPage({ userId });
     });
   }
