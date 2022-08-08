@@ -15,7 +15,7 @@ class Cron {
   }
 
   startCron() {
-    return this.cron.schedule("* * * * *", () => {
+    return this.cron.schedule("*/5 * * * *", () => {
       this.htmlChangeCron();
     });
   }

@@ -225,8 +225,6 @@ class PageCrawl {
     });
   }
 
-  // TODO: iterate over each element and look for changes in TEXT (non HTML content), and image src URLs.
-  // TODO: ignore all HTML attributes other than src, a, class, id
   private hasPageContentChanged({
     existingPageHtml,
     currentPageHtml,
@@ -234,7 +232,15 @@ class PageCrawl {
     existingPageHtml: string;
     currentPageHtml: string;
   }) {
-    return existingPageHtml !== currentPageHtml;
+    const existingText = new PageParser({
+      pageHtml: existingPageHtml,
+    }).getHtmlText();
+
+    const currentText = new PageParser({
+      pageHtml: currentPageHtml,
+    }).getHtmlText();
+
+    return existingText !== currentText;
   }
 
   private encodeMonitorType({ monitorType }: { monitorType: MonitorType }) {

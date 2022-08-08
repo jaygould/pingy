@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import * as cheerio from "cheerio";
 
 class PageParser {
@@ -15,6 +15,27 @@ class PageParser {
   getHtmlBody() {
     const $ = this.loadPageToCheerio();
     return $("body").html();
+  }
+
+  getHtmlText() {
+    // Returns ONLY text content, as some sites have hidden HTML attributes with values such as
+    // form nonces and constantly changing security strings which make every page refresh
+    // different from the last one
+    const $ = this.loadPageToCheerio();
+    let pageText: string = "";
+
+    $("*").each((i, element) => {
+      $(element)
+        .contents()
+        .each(function (i, element) {
+          if (element.type === "text" && element.parent.type !== "script") {
+            console.log(element);
+            pageText += element.data;
+          }
+        });
+    });
+
+    return pageText;
   }
 
   private loadPageToCheerio() {
