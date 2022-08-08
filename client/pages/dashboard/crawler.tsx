@@ -1,4 +1,4 @@
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useCookies } from "react-cookie";
 
@@ -9,6 +9,16 @@ import GlobalMessage from "../../components/GlobalMessage";
 
 type Props = {};
 
+type Crawl = {
+  id: number;
+  userId: number;
+  pageHtml: string;
+  pageUrl: string;
+  status: "initialCrawl" | "changedContent" | "pageDown" | "cancelled";
+  monitorType: "pageChange" | "pageDown";
+  createdAt: string;
+};
+
 interface ICrawlerFields {
   pageUrl: string;
   monitorType: "PAGE_DOWN" | "PAGE_CHANGE" | "";
@@ -18,9 +28,37 @@ interface ICrawlerResponse {
   message: string;
 }
 
+interface ICrawlerGetResponse {
+  crawls: Array<{
+    crawl: Crawl;
+    updates: Array<Crawl>;
+  }>;
+}
+
 const Crawler: FC<Props> = ({}) => {
   const [message, setMessage] = useState(null);
   const [cookies, setCookie] = useCookies(["jwt"]);
+  const [crawls, setCrawls] = useState<
+    Array<{
+      crawl: Crawl;
+      updates: Array<Crawl>;
+    }>
+  >();
+
+  useEffect(() => {
+    (async () => {
+      const response = await axios.get<ICrawlerGetResponse>(
+        `${process.env.NEXT_PUBLIC_API_URL}/watched-pages`,
+        {
+          headers: { Authorization: `Bearer ${cookies.jwt}` },
+        }
+      );
+
+      if (response?.data?.crawls.length) {
+        setCrawls(response.data.crawls);
+      }
+    })();
+  }, []);
 
   const {
     register,
@@ -128,6 +166,33 @@ const Crawler: FC<Props> = ({}) => {
             onSubmitRepeatCrawl();
           }}
         ></Button>
+      </div>
+
+      <div className="mb-10">
+        <h2>Current Monitoring</h2>
+
+        {crawls && crawls.length
+          ? crawls.map((crawl) => {
+              return (
+                <div className="mb-6">
+                  <h4>{crawl.crawl.pageUrl}</h4>
+                  {crawl?.updates.length ? (
+                    <ul>
+                      {crawl.updates.map((crawlUpdate) => {
+                        return (
+                          <li>
+                            {crawlUpdate.status} - {crawlUpdate.createdAt}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : (
+                    <p>There are no matching re-crawls for this monitor.</p>
+                  )}
+                </div>
+              );
+            })
+          : null}
       </div>
 
       <GlobalMessage

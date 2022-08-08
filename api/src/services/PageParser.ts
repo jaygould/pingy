@@ -29,7 +29,6 @@ class PageParser {
         .contents()
         .each(function (i, element) {
           if (element.type === "text" && element.parent.type !== "script") {
-            console.log(element);
             pageText += element.data;
           }
         });

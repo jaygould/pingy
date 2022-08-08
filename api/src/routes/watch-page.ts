@@ -1,4 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
+import { Crawls } from "../services/Crawls";
 import { PageCrawl } from "../services/PageCrawl";
 import { getErrors } from "../ts-helpers/errors";
 import { MonitorType } from "../ts-types/user.types";
@@ -47,6 +48,27 @@ async function routes(fastify: FastifyInstance) {
         await pageCrawl.recrawlPage({ userId });
 
         return reply.send({ message: "Success." });
+      } catch (e: unknown) {
+        const error = getErrors(e);
+
+        return reply.code(400).send({ message: error });
+      }
+    }
+  );
+
+  fastify.get(
+    `/watched-pages`,
+    {
+      onRequest: [fastify.authenticate],
+    },
+    async (request, reply: FastifyReply) => {
+      const userId = request?.user?.id;
+
+      try {
+        const userCrawls = new Crawls();
+        const crawls = await userCrawls.userCrawls({ userId });
+
+        return reply.send({ message: "Success.", crawls });
       } catch (e: unknown) {
         const error = getErrors(e);
 
