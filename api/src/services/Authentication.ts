@@ -1,14 +1,18 @@
-import { Prisma, PrismaClient, User } from "@prisma/client";
-
 import {
-  IUser,
-  IUserLogin,
-  IUserName,
+  Prisma,
+  PrismaClient,
+  User,
   LoginActivity,
-} from "../ts-types/user.types";
+  ActivityType,
+} from "@prisma/client";
 
 import { AuthenticationToken } from "./AuthenticationToken";
 import { AuthenticationPassword } from "./AuthenticationPassword";
+
+interface IUserCreate
+  extends Pick<User, "firstName" | "lastName" | "email" | "password"> {}
+
+interface IUserLogin extends Pick<User, "email" | "password"> {}
 
 class Authentication {
   public db;
@@ -23,7 +27,7 @@ class Authentication {
     lastName,
     email,
     password,
-  }: Partial<User>): Promise<User> {
+  }: IUserCreate): Promise<User> {
     if (!email || !firstName || !lastName || !password) {
       throw new Error("You must send all register details.");
     }
@@ -86,7 +90,10 @@ class Authentication {
     };
   }
 
-  logUserActivity(userId: number, activity: LoginActivity) {
+  logUserActivity(
+    userId: number,
+    activity: ActivityType
+  ): Promise<LoginActivity> {
     return this.db.loginActivity.create({
       data: { userId, activityType: activity },
     });
@@ -102,7 +109,7 @@ class Authentication {
     });
   }
 
-  validateEmail(email: string) {
+  validateEmail(email: string | number) {
     const re =
       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(String(email).toLowerCase());
@@ -113,7 +120,7 @@ class Authentication {
     lastName,
     email,
     password,
-  }: Partial<User>): Promise<User> {
+  }: IUserCreate): Promise<User> {
     if (!email) throw new Error();
 
     return this.db.user.create({

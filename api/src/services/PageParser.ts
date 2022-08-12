@@ -1,11 +1,13 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, PageCrawl } from "@prisma/client";
 import * as cheerio from "cheerio";
+
+type TPageParserConstructor = Pick<PageCrawl, "pageHtml">;
 
 class PageParser {
   public db;
   public pageHtml;
 
-  constructor({ pageHtml }: { pageHtml: string }) {
+  constructor({ pageHtml }: TPageParserConstructor) {
     this.db = new PrismaClient();
     this.pageHtml = pageHtml;
 

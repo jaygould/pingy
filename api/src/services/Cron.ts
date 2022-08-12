@@ -28,7 +28,10 @@ class Cron {
     activeCrawls.map(async (crawl) => {
       const userId = crawl.userId;
       const pageUrl = crawl.pageUrl;
-      const pageCrawl = new PageCrawl({ url: pageUrl, monitorType: "" });
+      const pageCrawl = new PageCrawl({
+        pageUrl: pageUrl,
+        monitorType: "pageDown",
+      });
       return pageCrawl.recrawlPage({ userId });
     });
   }

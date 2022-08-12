@@ -24,7 +24,7 @@ model LoginActivity {
   id  Int @id @default(autoincrement())
   userId  Int
   user  User  @relation(fields: [userId], references: [id])
-  activityType String?
+  activityType ActivityType?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -36,7 +36,7 @@ model PageCrawl {
   pageUrl String
   pageHtml String
   status Status
-  monitorType String @default("")
+  monitorType MonitorType[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -46,4 +46,14 @@ enum Status {
   changedContent
   pageDown
   cancelled
+}
+
+enum ActivityType {
+  login
+  signup
+}
+
+enum MonitorType {
+  pageDown
+  pageChange
 }

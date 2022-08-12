@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, PageCrawl } from "@prisma/client";
+import { TUserId } from "../ts-types";
 
 class Crawls {
   public db: PrismaClient;
@@ -9,7 +10,7 @@ class Crawls {
     this.userId = null;
   }
 
-  async activeCrawls() {
+  async activeCrawls(): Promise<PageCrawl[]> {
     return this.db.pageCrawl.findMany({
       where: {
         status: "initialCrawl",
@@ -17,7 +18,7 @@ class Crawls {
     });
   }
 
-  async userCrawls({ userId }: { userId: number }) {
+  async userCrawls({ userId }: TUserId) {
     const initialCrawls = await this.db.pageCrawl.findMany({
       where: {
         status: "initialCrawl",
@@ -39,7 +40,6 @@ class Crawls {
         };
       })
     );
-    return;
   }
 }
 

@@ -1,8 +1,10 @@
+import { PageCrawl } from "@prisma/client";
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { PageFetcher } from "../services/PageFetcher";
 import { getErrors } from "../ts-helpers/errors";
 
-type IGetPageRequest = FastifyRequest<{ Querystring: { pageUrl: string } }>;
+type TPageUrl = Pick<PageCrawl, "pageUrl">;
+type IGetPageRequest = FastifyRequest<{ Querystring: TPageUrl }>;
 
 async function routes(fastify: FastifyInstance) {
   fastify.get(
@@ -11,7 +13,7 @@ async function routes(fastify: FastifyInstance) {
       const pageUrl = request?.query?.pageUrl;
 
       try {
-        const auth = new PageFetcher({ url: pageUrl });
+        const auth = new PageFetcher({ pageUrl: pageUrl });
         const page = await auth.getPage();
 
         return reply.send({ page });

@@ -43,12 +43,20 @@ const Dashboard: FC<Props> = ({ name }) => {
   );
 };
 
-export const getServerSideProps = withAuthentication((context, props) => {
-  return {
-    props: {
-      name: props.name,
-    },
-  };
-});
+export const getServerSideProps = withAuthentication(
+  (
+    context,
+    props
+  ): {
+    props: Props;
+  } => {
+    // Type sp props MUST have name?
+    return {
+      props: {
+        name: props.name,
+      },
+    };
+  }
+);
 
 export default Dashboard;

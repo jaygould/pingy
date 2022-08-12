@@ -1,11 +1,15 @@
+import { MonitorType, PageCrawl as PageCrawlType } from "@prisma/client";
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { Crawls } from "../services/Crawls";
 import { PageCrawl } from "../services/PageCrawl";
 import { getErrors } from "../ts-helpers/errors";
-import { MonitorType } from "../ts-types/user.types";
+
+interface IWatchPageBody extends Pick<PageCrawlType, "pageUrl"> {
+  monitorType: MonitorType;
+}
 
 type IWatchPageRequest = FastifyRequest<{
-  Body: { pageUrl: string; monitorType: MonitorType };
+  Body: IWatchPageBody;
 }>;
 
 async function routes(fastify: FastifyInstance) {
@@ -21,7 +25,7 @@ async function routes(fastify: FastifyInstance) {
 
       try {
         const pageCrawl = new PageCrawl({
-          url: pageUrl,
+          pageUrl: pageUrl,
           monitorType: monitorType,
         });
         await pageCrawl.watchPage({ userId });
@@ -44,7 +48,10 @@ async function routes(fastify: FastifyInstance) {
       const userId = request?.user?.id;
 
       try {
-        const pageCrawl = new PageCrawl({ url: pageUrl, monitorType: "" });
+        const pageCrawl = new PageCrawl({
+          pageUrl: pageUrl,
+          monitorType: "pageDown",
+        });
         await pageCrawl.recrawlPage({ userId });
 
         return reply.send({ message: "Success." });

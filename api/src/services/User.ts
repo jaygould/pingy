@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, User as UserType } from "@prisma/client";
+import { PickRename } from "../ts-types";
 
 class User {
   public db: PrismaClient;
@@ -12,7 +13,10 @@ class User {
     return this.db.user.findMany();
   }
 
-  getUser({ userId, email }: { userId?: number; email?: string }) {
+  getUser({
+    userId,
+    email,
+  }: Partial<Pick<UserType, "email"> & PickRename<UserType, "id", "userId">>) {
     if (userId) {
       return this.db.user.findUnique({
         where: {

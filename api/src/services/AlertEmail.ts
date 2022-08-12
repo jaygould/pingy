@@ -1,23 +1,24 @@
 import { PrismaClient } from "@prisma/client";
 import { User } from "./User";
 import * as Postmark from "postmark";
+import { TUserId } from "../ts-types";
+
 const POSTMARK_SECRET: string = process.env.POSTMARK_SECRET || "";
+const isProduction = process.env.NODE_ENV;
+
+type TAlertEmailConstructor = {
+  alertMessage: string;
+} & TUserId;
 
 class AlertEmail {
   public db: PrismaClient;
-  public alertMessage: string;
-  public userId: number;
   public postmark: Postmark.ServerClient;
   public fromAddress: string;
   public subjectLine: string;
+  public alertMessage;
+  public userId;
 
-  constructor({
-    alertMessage,
-    userId,
-  }: {
-    alertMessage: string;
-    userId: number;
-  }) {
+  constructor({ alertMessage, userId }: TAlertEmailConstructor) {
     this.db = new PrismaClient();
     this.postmark = new Postmark.ServerClient(POSTMARK_SECRET);
     this.alertMessage = alertMessage;
@@ -35,6 +36,8 @@ class AlertEmail {
   }
 
   async sendEmail(): Promise<void> {
+    if (!isProduction) return;
+
     const userEmail = await this.getUserEmailAddress();
 
     try {

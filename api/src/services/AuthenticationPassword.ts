@@ -14,11 +14,11 @@ class AuthenticationPassword {
     this.hashedPassword = hashedPassword;
   }
 
-  public hashPassword() {
+  public hashPassword(): string {
     return this.password && bcrypt.hashSync(this.password.trim(), 12);
   }
 
-  public compareHashedPassword() {
+  public compareHashedPassword(): Promise<void> {
     return new Promise<void>((res, rej) => {
       if (!this.hashedPassword)
         return rej(

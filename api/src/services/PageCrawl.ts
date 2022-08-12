@@ -1,25 +1,34 @@
-import { PrismaClient, Status } from "@prisma/client";
+import {
+  PrismaClient,
+  Status,
+  MonitorType,
+  PageCrawl as PageCrawlType,
+} from "@prisma/client";
 import { PageFetcher } from "./PageFetcher";
 import { PageParser } from "./PageParser";
 import { Alert } from "./Alert";
-import { MonitorType } from "../ts-types/user.types";
+import { TUserId } from "../ts-types";
+
+interface IPageCrawlConstructor extends Pick<PageCrawlType, "pageUrl"> {
+  monitorType: MonitorType;
+}
 
 class PageCrawl {
   public db: PrismaClient;
   public pageFetcher: PageFetcher;
   public pageParser!: PageParser;
-  public url: string;
-  public monitorType: MonitorType;
+  public pageUrl;
+  public monitorType;
 
-  constructor({ url, monitorType }: { url: string; monitorType: MonitorType }) {
+  constructor({ pageUrl, monitorType }: IPageCrawlConstructor) {
     this.db = new PrismaClient();
-    this.pageFetcher = new PageFetcher({ url });
-    this.url = url;
+    this.pageFetcher = new PageFetcher({ pageUrl });
+    this.pageUrl = pageUrl;
     this.monitorType = monitorType;
   }
 
-  async watchPage({ userId }: { userId: number }) {
-    if (!this.url || !this.monitorType)
+  async watchPage({ userId }: TUserId) {
+    if (!this.pageUrl || !this.monitorType)
       throw new Error("Please supply URL and monitor type.");
 
     const existingWatch = await this.isUserWatchingPage({ userId });
@@ -55,21 +64,18 @@ class PageCrawl {
     }
   }
 
-  async recrawlPage({ userId }: { userId: number }) {
-    if (!this.url) throw new Error("No URL supplied.");
+  async recrawlPage({ userId }: TUserId) {
+    if (!this.pageUrl) throw new Error("No URL supplied.");
 
     const existingWatch = await this.isUserWatchingPage({ userId });
     if (!existingWatch) throw new Error("Page not being watched by user");
-
-    const monitorType = this.decodeMonitorType({
-      monitorType: existingWatch.monitorType,
-    });
+    if (!existingWatch.monitorType) throw new Error("No monitor type selected");
 
     try {
-      if (monitorType.includes("pageChange")) {
+      if (existingWatch.monitorType.includes("pageChange")) {
         this.actionRecrawlForPageChange({ userId });
       }
-      if (monitorType.includes("pageDown")) {
+      if (existingWatch.monitorType.includes("pageDown")) {
         this.actionRecrawlForPageDown({ userId });
       }
     } catch (e) {
@@ -77,7 +83,7 @@ class PageCrawl {
     }
   }
 
-  async actionRecrawlForPageChange({ userId }: { userId: number }) {
+  async actionRecrawlForPageChange({ userId }: TUserId) {
     try {
       const fetchedPage = await this.pageFetcher.getPage();
       const parsedPage = new PageParser({
@@ -104,9 +110,9 @@ class PageCrawl {
 
         const alert = new Alert({
           alertMethods: ["EMAIL"],
-          alertType: "CONTEN_CHANGED",
+          alertType: "CONTENT_CHANGED",
           userId,
-          pageUrl: this.url,
+          pageUrl: this.pageUrl,
         });
 
         await alert.sendAlert();
@@ -120,7 +126,7 @@ class PageCrawl {
     }
   }
 
-  async actionRecrawlForPageDown({ userId }: { userId: number }) {
+  async actionRecrawlForPageDown({ userId }: TUserId) {
     try {
       await this.pageFetcher.getPage();
       return;
@@ -138,7 +144,7 @@ class PageCrawl {
         alertMethods: ["EMAIL"],
         alertType: "SITE_DOWN",
         userId,
-        pageUrl: this.url,
+        pageUrl: this.pageUrl,
       });
 
       await alert.sendAlert();
@@ -146,11 +152,11 @@ class PageCrawl {
       return;
     }
   }
-  async isUserWatchingPage({ userId }: { userId: number }) {
+  async isUserWatchingPage({ userId }: TUserId) {
     const userWatchFound = await this.db.pageCrawl.findMany({
       where: {
         userId: userId,
-        pageUrl: this.url,
+        pageUrl: this.pageUrl,
         status: "initialCrawl",
       },
     });
@@ -160,14 +166,14 @@ class PageCrawl {
     return false;
   }
 
-  async allUserPageCrawls({ userId }: { userId: number }) {
+  async allUserPageCrawls({ userId }: TUserId) {
     const pageCrawls = await this.db.pageCrawl.findMany({
       orderBy: {
         createdAt: "desc",
       },
       where: {
         userId: userId,
-        pageUrl: this.url,
+        pageUrl: this.pageUrl,
         status: {
           not: "cancelled",
         },
@@ -179,7 +185,7 @@ class PageCrawl {
     return [];
   }
 
-  async mostRecentUserPageCrawl({ userId }: { userId: number }) {
+  async mostRecentUserPageCrawl({ userId }: TUserId) {
     const allUserPageCrawls = await this.allUserPageCrawls({ userId });
 
     return allUserPageCrawls[0] || null;
@@ -197,10 +203,10 @@ class PageCrawl {
     return this.db.pageCrawl.create({
       data: {
         userId,
-        pageUrl: this.url,
+        pageUrl: this.pageUrl,
         pageHtml: fetchedPage,
         status: "initialCrawl",
-        monitorType: this.encodeMonitorType({ monitorType }),
+        monitorType: monitorType,
       },
     });
   }
@@ -217,10 +223,10 @@ class PageCrawl {
     return this.db.pageCrawl.create({
       data: {
         userId,
-        pageUrl: this.url,
+        pageUrl: this.pageUrl,
         pageHtml: fetchedPage,
         status: status,
-        monitorType: "",
+        monitorType: [],
       },
     });
   }
@@ -241,25 +247,6 @@ class PageCrawl {
     }).getHtmlText();
 
     return existingText !== currentText;
-  }
-
-  private encodeMonitorType({ monitorType }: { monitorType: MonitorType }) {
-    try {
-      return JSON.stringify(monitorType);
-    } catch (e) {
-      return "";
-    }
-  }
-  private decodeMonitorType({
-    monitorType,
-  }: {
-    monitorType: string;
-  }): Array<MonitorType> {
-    try {
-      return JSON.parse(monitorType);
-    } catch (e) {
-      return [];
-    }
   }
 }
 

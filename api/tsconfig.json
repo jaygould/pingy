@@ -11,6 +11,7 @@
     "strict": true
   },
   // Needed as these declaration files are NOT ambient as they contain imports, so need manually adding
+  // Only INCLUDE should be needed, but API doesn't start after a fresh down and up if FILES is not there
   "include": ["./src/**/*"],
   "files": ["./src/ts-types/fastify.d.ts", "./src/ts-types/fastify-jwt.d.ts"]
 }

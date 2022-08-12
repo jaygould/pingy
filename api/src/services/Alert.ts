@@ -1,24 +1,22 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, PageCrawl } from "@prisma/client";
 import { AlertEmail } from "./AlertEmail";
 
 type AlertMethods = "TEXT" | "EMAIL";
-type AlertType = "CONTEN_CHANGED" | "SITE_DOWN";
+type AlertType = "CONTENT_CHANGED" | "SITE_DOWN";
 
-interface IAlertConstructor {
+type TAlertConstructor = {
   alertMethods: Array<AlertMethods>;
   alertType: AlertType;
-  userId: number;
-  pageUrl: string;
-}
+} & Pick<PageCrawl, "userId" | "pageUrl">;
 
 class Alert {
   public db: PrismaClient;
-  public alertMethods: Array<AlertMethods>;
-  public alertType: AlertType;
-  public userId: number;
-  public pageUrl: string;
+  public alertMethods;
+  public alertType;
+  public userId;
+  public pageUrl;
 
-  constructor({ alertMethods, alertType, userId, pageUrl }: IAlertConstructor) {
+  constructor({ alertMethods, alertType, userId, pageUrl }: TAlertConstructor) {
     this.db = new PrismaClient();
     this.alertMethods = alertMethods;
     this.alertType = alertType;
@@ -52,7 +50,7 @@ class Alert {
   private constructAlertMessage(): string | undefined {
     let alertMessage;
 
-    if (this.alertType === "CONTEN_CHANGED") {
+    if (this.alertType === "CONTENT_CHANGED") {
       alertMessage = `The content for the website ${this.pageUrl} has changed!`;
     }
     if (this.alertType === "SITE_DOWN") {

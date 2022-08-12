@@ -7,52 +7,39 @@ import axios from "axios";
 import Button, { ButtonTypeEnum } from "../../components/Button";
 import GlobalMessage from "../../components/GlobalMessage";
 
+import { IMessage, TPostResponse, TGetResponse } from "../../types/index";
+
 type Props = {};
 
-type Crawl = {
+interface ICrawl {
   id: number;
   userId: number;
   pageHtml: string;
   pageUrl: string;
   status: "initialCrawl" | "changedContent" | "pageDown" | "cancelled";
-  monitorType: "pageChange" | "pageDown";
+  monitorType: "pageChange" | "pageDown" | "";
   createdAt: string;
-};
-
-interface ICrawlerFields {
-  pageUrl: string;
-  monitorType: "PAGE_DOWN" | "PAGE_CHANGE" | "";
 }
 
-interface ICrawlerResponse {
-  message: string;
-}
+type TCrawlerFields = Pick<ICrawl, "pageUrl" | "monitorType">;
 
-interface ICrawlerGetResponse {
-  crawls: Array<{
-    crawl: Crawl;
-    updates: Array<Crawl>;
-  }>;
-}
+type TGroupedCrawls = Array<{
+  crawl: ICrawl;
+  updates: Array<ICrawl>;
+}>;
 
 const Crawler: FC<Props> = ({}) => {
-  const [message, setMessage] = useState(null);
+  const [message, setMessage] = useState<IMessage | null>(null);
   const [cookies, setCookie] = useCookies(["jwt"]);
-  const [crawls, setCrawls] = useState<
-    Array<{
-      crawl: Crawl;
-      updates: Array<Crawl>;
-    }>
-  >();
+  const [crawls, setCrawls] = useState<TGroupedCrawls>();
 
   useEffect(() => {
     (async () => {
-      const response = await axios.get<ICrawlerGetResponse>(
-        `${process.env.NEXT_PUBLIC_API_URL}/watched-pages`,
-        {
-          headers: { Authorization: `Bearer ${cookies.jwt}` },
-        }
-      );
+      const response = await axios.get<
+        TGetResponse<{ crawls: TGroupedCrawls }>
+      >(`${process.env.NEXT_PUBLIC_API_URL}/watched-pages`, {
+        headers: { Authorization: `Bearer ${cookies.jwt}` },
+      });
 
       if (response?.data?.crawls.length) {
         setCrawls(response.data.crawls);
@@ -65,16 +52,16 @@ const Crawler: FC<Props> = ({}) => {
     handleSubmit,
     formState: { errors },
     getValues,
-  } = useForm<ICrawlerFields>({
+  } = useForm<TCrawlerFields>({
     defaultValues: { pageUrl: "", monitorType: "" },
   });
 
-  const onSubmit: SubmitHandler<ICrawlerFields> = ({
+  const onSubmit: SubmitHandler<TCrawlerFields> = ({
     pageUrl,
     monitorType,
   }) => {
     axios
-      .post<ICrawlerResponse>(
+      .post<TPostResponse>(
         `${process.env.NEXT_PUBLIC_API_URL}/watch-page`,
         {
           pageUrl,
@@ -95,7 +82,7 @@ const Crawler: FC<Props> = ({}) => {
   const onSubmitRepeatCrawl = () => {
     const { pageUrl } = getValues();
     axios
-      .post<ICrawlerResponse>(
+      .post<TPostResponse>(
         `${process.env.NEXT_PUBLIC_API_URL}/recrawl-page`,
         {
           pageUrl,
@@ -174,33 +161,57 @@ const Crawler: FC<Props> = ({}) => {
         {crawls && crawls.length
           ? crawls.map((crawl) => {
               return (
-                <div className="mb-6">
-                  <h4>{crawl.crawl.pageUrl}</h4>
-                  {crawl?.updates.length ? (
-                    <ul>
-                      {crawl.updates.map((crawlUpdate) => {
-                        return (
-                          <li>
-                            {crawlUpdate.status} - {crawlUpdate.createdAt}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <p>There are no matching re-crawls for this monitor.</p>
-                  )}
-                </div>
+                <Accordion
+                  title={crawl.crawl.pageUrl}
+                  renderTitle={(title) => {
+                    return title;
+                  }}
+                  items={crawl.updates}
+                  renderItem={(item) => {
+                    return `${item.status} - ${item.createdAt}`;
+                  }}
+                />
               );
             })
           : null}
       </div>
 
       <GlobalMessage
-        message={message?.text}
+        text={message?.text}
         onClose={() => setMessage(null)}
-        isOpen={message && message.type && message.text}
+        isOpen={message !== null}
+        type={message?.type}
       />
     </>
+  );
+};
+
+interface IProps<T, U> {
+  title: U;
+  renderTitle: (title: U) => React.ReactNode;
+  items: T[];
+  renderItem: (item: T) => React.ReactNode;
+}
+
+const Accordion = <T, U>({
+  title,
+  renderTitle,
+  items,
+  renderItem,
+}: IProps<T, U>) => {
+  return (
+    <div className="mb-6">
+      <h4>{renderTitle(title)}</h4>
+      {items.length ? (
+        <ul>
+          {items.map((item) => {
+            return <li>{renderItem(item)}</li>;
+          })}
+        </ul>
+      ) : (
+        <p>There are no matching re-crawls for this monitor.</p>
+      )}
+    </div>
   );
 };
 

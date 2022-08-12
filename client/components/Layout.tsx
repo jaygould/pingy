@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FC, PropsWithChildren, ReactComponentElement } from "react";
+import { FC } from "react";
 
 type Props = {
   children: JSX.Element;
