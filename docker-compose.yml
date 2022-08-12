@@ -1,31 +1,31 @@
 version: "3.8"
 services:
   ping-client:
-    user: node
     build:
       context: ./client
       args:
         - NODE_ENV=development
-    command: sh -c "rsync -arvO /home/client/cache/node_modules/. /home/client/app/node_modules && npm run dev"
+    command: sh -c "npm run dev"
     ports:
       - 3000:3000
     volumes:
       - ./client:/home/client/app
+      - /home/client/app/node_modules
     restart: on-failure
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8080/v1
       NEXT_PUBLIC_NETWORK_API_URL: http://ping-api:8080/v1
   ping-api:
-    user: node
     build:
       context: ./api
       args:
         - NODE_ENV=development
-    command: sh -c "rsync -arvO /home/api/cache/node_modules/. /home/api/app/node_modules && npm run dev"
+    command: sh -c "npm run dev"
     ports:
       - 8080:8080
     volumes:
       - ./api:/home/api/app
+      - /home/api/app/node_modules
     restart: on-failure
     depends_on:
       - ping-db
