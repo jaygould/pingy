@@ -1,6 +1,6 @@
 # Pingy
 
-#### A webpage monitoring web application built with modern tech client and server side tech.
+#### A webpage monitoring web application built with modern client and server side tech.
 
 > This project is currently built for the purpose of learning the various tech involved, and is not a production ready solution, yet.
 
@@ -21,6 +21,7 @@
 
 Both front and back end written in TypeScript, making use of strong typing for client side, re-usable generic components, and server side typed classes.
 
+- Docker with Postgres database to get stuck in easily
 - TypeScript
 - Next.js & React
 - Styled Components
