@@ -28,7 +28,7 @@ const Footer: FC<IProps> = ({}) => {
           <Link href="https://jaygould.co.uk/">
             <a>By Jay Gould</a>
           </Link>
-          <Link href="https://github.com/jaygould/">
+          <Link href="https://github.com/jaygould/pingy">
             <a>GitHub</a>
           </Link>
         </div>
