@@ -86,6 +86,7 @@ const LoggedInNav = styled.nav`
 
 const Main = styled.main`
   margin-bottom: auto;
+  width: 100%;
 `;
 
 const navItems = [
