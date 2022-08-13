@@ -1,34 +1,155 @@
-import Link from "next/link";
 import { FC } from "react";
+import styled from "styled-components";
+import THEME from "../styles/theming";
+import Header from "./Header";
+import Footer from "./Footer";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
-type Props = {
+const LayoutWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100vh;
+`;
+
+const LayoutBody = styled.section`
+  > div {
+    @media only screen and (min-width: 768px) {
+      flex-direction: row;
+    }
+    display: flex;
+    flex-direction: column;
+    min-height: 20em;
+    padding-top: 2em;
+  }
+`;
+
+const LoggedInNav = styled.nav`
+  background-color: ${THEME.COLORS.secondary};
+  border-radius: 1.5em;
+  padding: 1.25em 0em;
+  margin-bottom: 2em;
+  @media only screen and (min-width: 768px) {
+    margin-right: 2em;
+    margin-bottom: 0em;
+  }
+  h2 {
+    font-family: ${THEME.FONT.heading};
+    color: white;
+    font-size: ${THEME.FONT_SIZE["3xl"]};
+    margin-bottom: 0.5em;
+    padding: 0 1.1em;
+    text-align: center;
+    @media only screen and (min-width: 768px) {
+      margin-bottom: 2em;
+      font-size: ${THEME.FONT_SIZE.xl};
+    }
+  }
+  .nav-items {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1em;
+    padding: 0 2em;
+    @media only screen and (min-width: 768px) {
+      flex-direction: column;
+      padding: 0;
+    }
+    > div {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      padding: 0.4em 0;
+    }
+    @media only screen and (min-width: 768px) {
+      .current-page {
+        position: absolute;
+        left: 0em;
+        top: 0;
+        bottom: 0;
+        width: 0.4em;
+        background-color: ${THEME.COLORS.secondaryDark};
+        border-radius: 0 0.3em 0.3em 0;
+      }
+    }
+    img {
+      width: 2em;
+      @media only screen and (min-width: 768px) {
+        width: 3em;
+      }
+    }
+  }
+`;
+
+const Main = styled.main`
+  margin-bottom: auto;
+`;
+
+const navItems = [
+  {
+    slug: "/dashboard",
+    iconUrl: "/home-icon.svg",
+  },
+  {
+    slug: "/dashboard/crawler",
+    iconUrl: "/new-icon.svg",
+  },
+  {
+    slug: "/dashboard/list-crawler",
+    iconUrl: "/list-icon.svg",
+  },
+  {
+    slug: "/dashboard/users",
+    iconUrl: "/user-icon.svg",
+  },
+];
+
+interface IProps {
   children: JSX.Element;
-};
+  isLoggedIn?: boolean;
+}
 
-const Layout: FC<Props> = ({ children }) => {
+const Layout: FC<IProps> = ({ children, isLoggedIn = false }) => {
+  const router = useRouter();
+
   return (
-    <div className="flex flex-col h-screen justify-between">
-      <header className="bg-lime-800">
-        <div className="container py-10">
-          <h1 className="text-center text-2xl text-white">
-            Next.js, TypeScript, Fastify & Prisma starter
-          </h1>
-        </div>
-      </header>
-      <main className="container py-10 mb-auto">{children}</main>
-      <footer className="w-full bg-orange-700">
-        <div className="container py-10">
-          <div className="flex items-center gap-2">
-            <Link href="https://jaygould.co.uk/2022-05-08-typescript-fastify-prisma-starter-with-docker/">
-              <a className="text-white underline">By Jay Gould</a>
-            </Link>
-            <Link href="https://github.com/jaygould/typescript-fastify-prisma-starter/">
-              <a className="text-white underline">GitHub</a>
-            </Link>
+    <LayoutWrapper>
+      <div>
+        <Header isLoggedIn={isLoggedIn}></Header>
+        <LayoutBody>
+          <div className="container">
+            {isLoggedIn ? (
+              <LoggedInNav>
+                <h2>Pingy</h2>
+                <div className="nav-items">
+                  {navItems &&
+                    navItems.map((navItem) => {
+                      return (
+                        <div>
+                          {navItem.slug === router.pathname ? (
+                            <div className="current-page"></div>
+                          ) : null}
+                          <Link href={navItem.slug}>
+                            <a>
+                              <img src={navItem.iconUrl} />
+                            </a>
+                          </Link>
+                        </div>
+                      );
+                    })}
+                </div>
+              </LoggedInNav>
+            ) : null}
+
+            <Main>{children}</Main>
           </div>
-        </div>
-      </footer>
-    </div>
+        </LayoutBody>
+      </div>
+      <Footer></Footer>
+    </LayoutWrapper>
   );
 };
 

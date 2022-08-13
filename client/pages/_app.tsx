@@ -1,15 +1,14 @@
 import { CookiesProvider } from "react-cookie";
 import type { AppProps } from "next/app";
-import Layout from "../components/Layout";
 
 import "../styles/global.css";
+import { GlobalStyles } from "../styles/theming";
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
     <CookiesProvider>
-      <Layout>
-        <Component {...pageProps} />
-      </Layout>
+      <GlobalStyles> </GlobalStyles>
+      <Component {...pageProps} />
     </CookiesProvider>
   );
 }

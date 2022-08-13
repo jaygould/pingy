@@ -2,6 +2,9 @@ import React, { FC } from "react";
 import withAuthentication from "../../services/with-authentication";
 import axios from "axios";
 import UserList from "../../components/UserList";
+import Layout from "../../components/Layout";
+
+import styled from "styled-components";
 
 // Probably wouldn't be done this this IRL, but this adds a "position" object value
 // to the AllUsers list. Note that this DOESN'T get added until actually within the
@@ -12,8 +15,6 @@ import UserList from "../../components/UserList";
 // generic type being added, as it's all being passed back up to the render prop,
 // so we've kept the UserList component separate and only worrying about the UI and
 // implementation, not the data inside.
-
-// https://mariusschulz.com/blog/passing-generics-to-jsx-elements-in-typescript
 
 type IListNumber = {
   position: number;
@@ -31,35 +32,51 @@ type Props = {
   thisUser: User[];
 };
 
+const UsersWrap = styled.div`
+  > div {
+    margin-bottom: 3em;
+    .user-item {
+      span {
+        margin-right: 0.25em;
+      }
+    }
+  }
+`;
+
 const Users: FC<Props> = ({ thisUser, users }) => {
   return (
-    <>
-      <h2>Dashboard</h2>
-      <div className="mb-10">
-        <p>Users:</p>
-        <UserList<AllUsers<IListNumber>>
-          users={users.map((u, i) => ({ ...u, position: i + 1 }))}
-          render={(user) => {
-            return (
-              <div>
-                <span>{user.position}</span>
-                {user.email}
-              </div>
-            );
-          }}
-        ></UserList>
-      </div>
+    <Layout isLoggedIn={true}>
+      <>
+        <h2>Users</h2>
 
-      <div className="mb-10">
-        <p>Current user:</p>
-        <UserList<User>
-          users={thisUser}
-          render={(user: User) => {
-            return <div>{user.email}</div>;
-          }}
-        ></UserList>
-      </div>
-    </>
+        <UsersWrap>
+          <div>
+            <h3>All users:</h3>
+            <UserList<AllUsers<IListNumber>>
+              users={users.map((u, i) => ({ ...u, position: i + 1 }))}
+              render={(user) => {
+                return (
+                  <div className="user-item">
+                    <span>{user.position}.</span>
+                    {user.email}
+                  </div>
+                );
+              }}
+            ></UserList>
+          </div>
+
+          <div>
+            <h3>Current user:</h3>
+            <UserList<User>
+              users={thisUser}
+              render={(user: User) => {
+                return <div>{user.email}</div>;
+              }}
+            ></UserList>
+          </div>
+        </UsersWrap>
+      </>
+    </Layout>
   );
 };
 

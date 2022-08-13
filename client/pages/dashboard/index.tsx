@@ -1,45 +1,40 @@
 import React, { FC, useState } from "react";
-import Button, { ButtonTypeEnum } from "../../components/Button";
-import { useCookies } from "react-cookie";
-import { useRouter } from "next/router";
+import Layout from "../../components/Layout";
 import withAuthentication from "../../services/with-authentication";
 import Link from "next/link";
+import styled from "styled-components";
+
+const DashboardImage = styled.div`
+  margin: 3em 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  img {
+    max-width: 600px;
+    width: 80%;
+  }
+`;
 
 type Props = {
   name: string;
 };
 
 const Dashboard: FC<Props> = ({ name }) => {
-  const [cookies, setCookie, removeCookie] = useCookies(["jwt"]);
-  const router = useRouter();
-
   return (
-    <>
-      <h2>Dashboard</h2>
-      <p>Welcome, {name}</p>
+    <Layout isLoggedIn={true}>
+      <>
+        <h1>Welcome, {name}</h1>
 
-      <div className="mb-5">
-        <Link href="/dashboard/users">
-          <a className="underline">Users</a>
-        </Link>
-      </div>
-      <div className="mb-5">
-        <Link href="/dashboard/crawler">
-          <a className="underline">Crawler</a>
-        </Link>
-      </div>
+        <p>
+          You can now start monitoring web pages. Relax while we check for
+          updates and send you an alert when we see one.
+        </p>
 
-      <div className="mb-5">
-        <Button
-          text="Log out"
-          type={ButtonTypeEnum.onClick}
-          onClick={() => {
-            removeCookie("jwt");
-            router.push("/");
-          }}
-        />
-      </div>
-    </>
+        <DashboardImage>
+          <img src="/dashboard-landing.svg" />
+        </DashboardImage>
+      </>
+    </Layout>
   );
 };
 
